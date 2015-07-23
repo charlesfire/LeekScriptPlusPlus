@@ -18,7 +18,7 @@ var Compiler = function()
 	this.addPass = function(pass)
 	{
 		this.passes[this.passes.length] = pass;
-	}
+	};
 	
 	this.compile = function(code)
 	{
@@ -41,31 +41,30 @@ var ArrayLikeObjectPass = function()
 {
 	this.compile = function(code)
 	{
-		code = code.replace(/\.(\w+)\b/g, "['$1']");
+		code = code.replace(/\.(\w+)\b/g, "\/\*OLA\*\/['$1']");
 		return code;
 	};
 	
 	this.decompile = function(code)
 	{
-		code = code.replace(/\[('|")(\w+)('|")\]/g, ".$2");
+		code = code.replace(/\/\*OLA\*\/\[('|")(\w+)('|")\]/g, ".$2");
 		return code;
 	};
-}
+};
 
 function modifyEditors()
 {
 	for(var _editor in editors)
 	{
-		console.log(_editor);
-		var editor = editors[_editor];
-		editor.load = function(show)
+		editors[_editor].load = function(show)
 		{
+			var editor = this;
 			_.get('ai/get/' + editor.id + '/$', function(data)
 			{
 				if (data.success)
 				{
 					var ai = data.ai.code;
-					//ai = compiler.decompile(ai);
+					ai = compiler.decompile(ai);
 
 					if (_BASIC)
 					{
@@ -89,11 +88,12 @@ function modifyEditors()
 						editor.show();
 					}
 				}
-			}, "Custom load");
+			});
 		};
 
-		editor.save = function()
+		editors[_editor].save = function()
 		{
+			var editor = this;
 			if (_saving) return;
 			_saving = true;
 
@@ -107,7 +107,7 @@ function modifyEditors()
 			var saveID = editor.id > 0 ? editor.id : 0;
 
 			var content = _BASIC ? editor.editorDiv.find('textarea').val() : editor.editor.getValue();
-			//content = compiler.compile(content);
+			content = compiler.compile(content);
 
 			_.post('ai/save/', {ai_id: saveID, code: content}, function(data)
 			{
@@ -115,7 +115,7 @@ function modifyEditors()
 				$('#results').empty().show();
 				$('#compiling').hide();
 
-				if (!data.success || data.result.length == 0)
+				if (!data.success || data.result.length === 0)
 				{
 					$('#results').append("<div class='error'>× <i>" + _.lang.get('editor', 'server_error') + "</i></div>");
 					return;
@@ -130,9 +130,9 @@ function modifyEditors()
 					var iaEditor = editors[ia];
 					var iaName = iaEditor.name;
 
-					if (code == 2)
+					if (code === 2)
 					{
-						$('#results').append("<div class='good'>? " + _.lang.get('editor', 'valid_ai', _.protect(iaName)) + "</div><br>");
+						$('#results').append("<div class='good'>✔ " + _.lang.get('editor', 'valid_ai', _.protect(iaName)) + "</div><br>");
 						$('#results .good').last().delay(800).fadeOut(function()
 						{
 							$('#results').hide();
@@ -149,7 +149,7 @@ function modifyEditors()
 						}
 
 					}
-					else if (code == 1)
+					else if (code === 1)
 					{
 						var info = res[2];
 
@@ -157,22 +157,22 @@ function modifyEditors()
 						iaEditor.tabDiv.removeClass("error").addClass("error");
 						iaEditor.error = true;
 					} 
-					else if (code == 0)
+					else if (code === 0)
 					{
 
-						var line = res[3]
-						var pos = res[4]
-						var info = res[5]
+						var line = res[3];
+						var pos = res[4];
+						var info = res[5];
 
-						if (res.length == 8)
+						if (res.length === 8)
 						{
-							info = _.lang.get('java_compilation', res[6], res[7])
+							info = _.lang.get('java_compilation', res[6], res[7]);
 						}
 						else
 						{
-							info = _.lang.get('java_compilation', res[6])
+							info = _.lang.get('java_compilation', res[6]);
 						}
-						info = '(' + res[5] + ') ' + info
+						info = '(' + res[5] + ') ' + info;
 
 						$('#results').append("<div class='error'>× " + _.lang.get('editor', 'ai_error', _.protect(iaName), line) + "&nbsp; ▶ " + info + "</div><br>");
 
@@ -193,18 +193,18 @@ function modifyEditors()
 					editor.test();
 				}
 			});
-		}
-		editors[_editor] = editor;
+		};
 	}
+	editors[current].load(true);
 }
 
 
 var compiler = new Compiler();
-//compiler.addPass(new ArrayLikeObjectPass);
+compiler.addPass(new ArrayLikeObjectPass);
 
 var interval = setInterval(function()
 {
-	if (typeof editors !== "undefined" && Object.keys(editors).length != 0)
+	if (typeof editors !== "undefined" && Object.keys(editors).length !== 0)
 	{
 		modifyEditors();
 		clearInterval(interval);
