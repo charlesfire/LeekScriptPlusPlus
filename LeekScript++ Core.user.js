@@ -25,11 +25,14 @@ var Compiler = function()
 		{
 			result = this.passes[i].compile(code);
 			if (result.error != undefined)
+			{
 				showError(aiID, result.error);
+				return {code : code, success : false};
+			}
 			else
 				code = result.code;
+			return {code : code, success : true};
 		}
-		return code;
 	};
 	
 	this.decompile = function(code, aiID)
@@ -40,11 +43,14 @@ var Compiler = function()
 		{
 			result = this.passes[i].decompile(code);
 			if (result.error != undefined)
+			{
 				showError(aiID, result.error);
+				return {code : code, success : false};
+			}
 			else
 				code = result.code;
 		}
-		return code;
+		return {code : code, success : true};
 	};
 	
 	function showError(iaID, error)
@@ -67,7 +73,10 @@ function modifyEditors()
 				if (data.success)
 				{
 					var ai = data.ai.code;
-					ai = compiler.decompile(ai, editor.id);
+					var result = compiler.decompile(ai, editor.id);
+					if (!result.success)
+						return;
+					ai = result.code;
 
 					if (_BASIC)
 					{
@@ -96,6 +105,8 @@ function modifyEditors()
 
 		editors[_editor].save = function()
 		{
+			console.clear();
+			console.log("custom save");
 			var editor = this;
 			if (_saving) return;
 			_saving = true;
@@ -110,7 +121,13 @@ function modifyEditors()
 			var saveID = editor.id > 0 ? editor.id : 0;
 
 			var content = _BASIC ? editor.editorDiv.find('textarea').val() : editor.editor.getValue();
-			content = compiler.compile(content, editor.id);
+			var result = compiler.compile(content, editor.id);
+			if (!result.success)
+			{
+				console.log("error---------------------------------------------------------");
+				return;
+			}
+			content = result.code;
 
 			_.post('ai/save/', {ai_id: saveID, code: content}, function(data)
 			{
@@ -210,5 +227,6 @@ var interval = setInterval(function()
 	{
 		modifyEditors();
 		clearInterval(interval);
+		console.log("LeekScript++ enabled!");
 	}
 }, 100);
