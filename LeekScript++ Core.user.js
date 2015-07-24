@@ -227,6 +227,6 @@ var interval = setInterval(function()
 	{
 		modifyEditors();
 		clearInterval(interval);
-		console.log("LeekScript++ enabled!");
+		console.log("LeekScript+++ enabled!");
 	}
 }, 100);
