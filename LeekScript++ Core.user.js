@@ -58,6 +58,7 @@ var Compiler = function()
 
 function modifyEditors()
 {
+	console.log("YOLOOOOOOOOOOOOOOOOOOOOOOOOOO!");
 	for(var _editor in editors)
 	{
 		editors[_editor].load = function(show)
