@@ -8,9 +8,6 @@
 // @grant        none
 // ==/UserScript==
 
-//     /\[('|")(\w+)('|")\]/g
-//     /\.(\w+)\b/g
-
 var Compiler = function()
 {
 	this.passes = new Array();
@@ -58,7 +55,6 @@ var Compiler = function()
 
 function modifyEditors()
 {
-	console.log("YOLOOOOOOOOOOOOOOOOOOOOOOOOOO!");
 	for(var _editor in editors)
 	{
 		editors[_editor].load = function(show)
@@ -212,6 +208,5 @@ var interval = setInterval(function()
 	{
 		modifyEditors();
 		clearInterval(interval);
-		console.log("LS++ activated!");
 	}
 }, 100);
