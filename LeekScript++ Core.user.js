@@ -17,7 +17,7 @@ var Compiler = function()
 		this.passes[this.passes.length] = pass;
 	};
 	
-	this.compile = function(code)
+	this.compile = function(code, aiID)
 	{
 		var result;
 		var length = this.passes.length;
@@ -25,14 +25,14 @@ var Compiler = function()
 		{
 			result = this.passes[i].compile(code);
 			if (result.error != undefined)
-				showError(result.error);
+				showError(aiID, result.error);
 			else
 				code = result.code;
 		}
 		return code;
 	};
 	
-	this.decompile = function(code)
+	this.decompile = function(code, aiID)
 	{
 		var result;
 		var length = this.passes.length;
@@ -40,16 +40,18 @@ var Compiler = function()
 		{
 			result = this.passes[i].decompile(code);
 			if (result.error != undefined)
-				showError(result.error);
+				showError(aiID, result.error);
 			else
 				code = result.code;
 		}
 		return code;
 	};
 	
-	function showError(error)
+	function showError(iaID, error)
 	{
-		$('#results').append("<div class='error'>× <i>" + error + "</i></div>");
+		$('#results').append("<div class='error'>× <b>" + editors[aiID].name + "</b>&nbsp; ▶ <i>" + error + "</i></div>");
+		editors[aiID].error = true;
+		editors[aiID].showErrors();
 	}
 };
 
@@ -65,7 +67,7 @@ function modifyEditors()
 				if (data.success)
 				{
 					var ai = data.ai.code;
-					ai = compiler.decompile(ai);
+					ai = compiler.decompile(ai, editor.id);
 
 					if (_BASIC)
 					{
@@ -108,7 +110,7 @@ function modifyEditors()
 			var saveID = editor.id > 0 ? editor.id : 0;
 
 			var content = _BASIC ? editor.editorDiv.find('textarea').val() : editor.editor.getValue();
-			content = compiler.compile(content);
+			content = compiler.compile(content, editor.id);
 
 			_.post('ai/save/', {ai_id: saveID, code: content}, function(data)
 			{
