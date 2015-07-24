@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         LeekScript++
+// @name         LeekScript++ Core
 // @namespace    http://your.homepage/
 // @version      0.1
-// @description  enter something useful
-// @author       You
+// @description  This is the core plugin for my additions to the leekscript.
+// @author       Charlesfire
 // @match        http://leekwars.com/*
 // @grant        none
 // ==/UserScript==
@@ -22,34 +22,38 @@ var Compiler = function()
 	
 	this.compile = function(code)
 	{
+		var result;
 		var length = this.passes.length;
 		for(var i = 0; i < length; i++)
-			code = this.passes[i].compile(code);
+		{
+			result = this.passes[i].compile(code);
+			if (result.error != undefined)
+				showError(result.error);
+			else
+				code = result.code;
+		}
 		return code;
 	};
 	
 	this.decompile = function(code)
 	{
+		var result;
 		var length = this.passes.length;
 		for(var i = 0; i < length; i++)
-			code = this.passes[i].decompile(code);
-		return code;
-	};
-};
-
-var ArrayLikeObjectPass = function()
-{
-	this.compile = function(code)
-	{
-		code = code.replace(/\.(\w+)\b/g, "\/\*OLA\*\/['$1']");
+		{
+			result = this.passes[i].decompile(code);
+			if (result.error != undefined)
+				showError(result.error);
+			else
+				code = result.code;
+		}
 		return code;
 	};
 	
-	this.decompile = function(code)
+	function showError(error)
 	{
-		code = code.replace(/\/\*OLA\*\/\[('|")(\w+)('|")\]/g, ".$2");
-		return code;
-	};
+		$('#results').append("<div class='error'>× <i>" + error + "</i></div>");
+	}
 };
 
 function modifyEditors()
@@ -200,7 +204,6 @@ function modifyEditors()
 
 
 var compiler = new Compiler();
-compiler.addPass(new ArrayLikeObjectPass);
 
 var interval = setInterval(function()
 {
